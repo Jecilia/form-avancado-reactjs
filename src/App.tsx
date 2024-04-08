@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 // Scheme é uma representação de estrutura de dados, quais campos, qual é o tipo e por aí fora
 const createUserFormSchema = z.object({
@@ -26,6 +26,12 @@ const createUserFormSchema = z.object({
       return email.endsWith('@rocketseat.com.br')
     }, 'o email precisa ser da rocketseat'),
   password: z.string().min(6, 'A senha precisa de no mínimo 6 caracter'),
+  techs: z.array(
+    z.object({
+      title: z.string().nonempty('o titilo é obrigatório'),
+      knowledge: z.number().min(1).max(100),
+    }),
+  ),
 })
 type createUserFormData = z.infer<typeof createUserFormSchema>
 export function App() {
@@ -33,10 +39,17 @@ export function App() {
     register,
     handleSubmit,
     formState: { errors },
+    control,
   } = useForm<createUserFormData>({
     resolver: zodResolver(createUserFormSchema),
   })
-
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'techs',
+  })
+  function addNewTech() {
+    append({ title: '', knowledge: 0 })
+  }
   const [output, setOutput] = useState('')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function createUser(data: any) {
@@ -76,6 +89,35 @@ export function App() {
             {...register('password')}
           />
           {errors.password && <span>{errors.password.message}</span>}
+        </div>
+        <div className=" flex flex-col gap-1">
+          <label htmlFor="" className="flex items-center justify-between">
+            Tecnologias
+            <button
+              type="button"
+              onClick={addNewTech}
+              className="text-sm text-emerald-500"
+            >
+              Adicionar
+            </button>
+          </label>
+          {fields.map((field, index) => {
+            return (
+              <div key={field.id} className="flex gap-2">
+                <input
+                  type="text"
+                  className="h-10 flex-1 rounded border border-zinc-800 bg-zinc-900 px-3 shadow-sm"
+                  {...register(`techs.${index}.title`)}
+                />
+
+                <input
+                  type="number"
+                  className=" h-10 w-16 flex-1 rounded border border-zinc-800 bg-zinc-900 px-3 shadow-sm"
+                  {...register(`techs.${index}.knowledge`)}
+                />
+              </div>
+            )
+          })}
         </div>
         <button
           type="submit"
