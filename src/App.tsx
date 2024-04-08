@@ -4,10 +4,27 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 // Scheme é uma representação de estrutura de dados, quais campos, qual é o tipo e por aí fora
 const createUserFormSchema = z.object({
+  name: z
+    .string()
+    .nonempty('O nome é obrigatório')
+    .transform((name) => {
+      return name
+        .trim()
+        .split(' ') // o espaço é importante dentro do split e join
+        .map((word) => {
+          return word[0].toLocaleUpperCase().concat(word.substring(1))
+        })
+        .join(' ')
+    }),
   email: z
     .string()
-    .nonempty('o email é obrigatorio')
-    .email('Formato de email inválido'),
+    .nonempty('o email é obrigatório')
+    .email('Formato de email inválido')
+    .toLowerCase()
+    .refine((email) => {
+      // pesquisar sobre superRefine
+      return email.endsWith('@rocketseat.com.br')
+    }, 'o email precisa ser da rocketseat'),
   password: z.string().min(6, 'A senha precisa de no mínimo 6 caracter'),
 })
 type createUserFormData = z.infer<typeof createUserFormSchema>
@@ -33,7 +50,16 @@ export function App() {
         className="flex w-full max-w-sm flex-col gap-4 px-3"
       >
         <div className=" flex flex-col gap-1">
-          <label htmlFor="">E-mail</label>
+          <label htmlFor="name">Nome</label>
+          <input
+            type="text"
+            className="h-10 rounded border border-zinc-800 bg-zinc-900 px-3 shadow-sm"
+            {...register('name')}
+          />
+          {errors.name && <span>{errors.name.message}</span>}
+        </div>
+        <div className=" flex flex-col gap-1">
+          <label htmlFor="email">E-mail</label>
           <input
             type="email"
             className="h-10 rounded border border-zinc-800 bg-zinc-900 px-3 shadow-sm"
@@ -43,7 +69,7 @@ export function App() {
         </div>
 
         <div className=" flex flex-col gap-1">
-          <label htmlFor="">Senha</label>
+          <label htmlFor="password">Senha</label>
           <input
             type="password"
             className="h-10 rounded border border-zinc-800 bg-zinc-900 px-3 shadow-sm"
