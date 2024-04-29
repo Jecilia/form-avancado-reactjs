@@ -53,7 +53,7 @@ export function App() {
   } = useForm<createUserFormData>({
     resolver: zodResolver(createUserFormSchema),
   })
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append } = useFieldArray({
     control,
     name: 'techs',
   })
